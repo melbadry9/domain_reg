@@ -1,13 +1,20 @@
 extern crate requests;
+use threadpool::ThreadPool;
+//use std::sync::mpsc::{channel, RecvError};
 
 use requests::ToJson;
 use std::{io::{self, BufRead}};
 
 fn main() {
     let stream = io::stdin();
+    let pool = ThreadPool::new(10);
+    //let (tx, rx) = channel();
     for domain in stream.lock().lines() {
-        check_av(&domain.unwrap());
+        pool.execute(|| {
+            check_av(&domain.unwrap())
+        });
     }
+    pool.join();
 }
 
 fn check_av(domain: &String) {
@@ -15,7 +22,15 @@ fn check_av(domain: &String) {
     let res = requests::get(url);
 
     match res  {
-        Ok(res) =>  println!("{}: {}", &domain, res.json().unwrap()["ExactMatchDomain"]["AvailabilityLabel"]),
-        Err(_err) => println!("{}: ERROR", &domain)
+        Ok(res) =>  {
+            let status = res.json();
+            match status {
+                Ok(status) => {
+                    println!("{}: {}", &domain, &status["ExactMatchDomain"]["AvailabilityLabel"]);
+                },
+                Err(_er) => println!("{}: Rate-Limit", &domain)
+            };
+        },
+        Err(_err) => println!("{}: Request Error", &domain)
     };
 }

@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 requests = "0.0.30"
+threadpool = "1.8.1"
