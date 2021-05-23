@@ -1,6 +1,6 @@
 # domain_reg
 
-Check domain avaliablity for registration  
+Check domain availability for registration
 
 ## Build  
 
